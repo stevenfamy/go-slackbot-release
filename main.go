@@ -124,13 +124,10 @@ func main() {
 					if now.After(t1) {
 						log.Println("OK Release", releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion)
 						//update to 1
-						_, err := models.DB.Query("UPDATE release_schedule set released = 1 where id = ?", releaseSchedule.Id)
-						if err != nil {
-							log.Printf(err.Error())
-						}
-
+						callJenkins(releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion, false, "0000")
+						models.UpdateReleased(releaseSchedule.Id)
 					} else {
-						log.Println("Time not match yet", releaseSchedule.Id)
+						log.Println(releaseSchedule.Id, "Time not match yet")
 					}
 				}
 			}
@@ -189,7 +186,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "how to schedule release") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hey <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma'", user.ID)
+		attachment.Text = fmt.Sprintf("Hey <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma in Asia/Singapore timezone'", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "Example: schedule release logistics-backend <<backend-1.1.0-beta>> at 09:25PM"
 		attachment.Color = "#563a9b"
@@ -233,7 +230,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 						attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 					}
 				} else {
-					attachment.Text = fmt.Sprintf("Hi <@%s>, looks like your time format is wrong, should be hh:mma, e.g 09:00PM", user.ID)
+					attachment.Text = fmt.Sprintf("Hi <@%s>, looks like your time format is wrong, should be hh:mma in Asia/Singapore timezone, e.g 09:00PM", user.ID)
 					attachment.Color = "#e20228"
 					attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 				}
