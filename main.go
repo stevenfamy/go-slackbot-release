@@ -179,6 +179,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	//Id list that have permission to release
 	//steven, pales, ilham, dzul, mas brad, fajar
 	uid := []string{"UR3D1N1QT", "D01HXHHK0N7", "D03KHNZU0P5", "D047KGDDMKQ", "DR6UJPEDP", "D01HYERALAK"}
+	// specialUid := []string{""}
 
 	projectList := []string{"gla-platform", "gla-parent", "logistics-backend", "logistics-web", "logistics-mobile"}
 
@@ -254,7 +255,6 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 				attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 			}
 		}
-
 	} else if strings.Contains(text, "schedule release") {
 		if contains(uid, user.ID) {
 
@@ -325,10 +325,15 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			attachment.Footer = "GRIP Release Bot cannot continue"
 		}
 	} else {
-		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hi <@%s>", user.ID)
-		// attachment.Pretext = "How can I be of service"
-		attachment.Color = "#563a9b"
+		if user.ID == "D023A1DFQMD" {
+			attachment.Text = ":ice_cube: :tea:"
+			attachment.Color = "#FF00FF"
+		} else {
+			// Send a message to the user
+			attachment.Text = fmt.Sprintf("Hi <@%s>", user.ID)
+			// attachment.Pretext = "How can I be of service"
+			attachment.Color = "#563a9b"
+		}
 	}
 
 	// Send the message to the channel
