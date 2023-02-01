@@ -110,18 +110,22 @@ func main() {
 					log.Printf(err.Error())
 				}
 
+				//loop all active schedule
 				for results.Next() {
 					var releaseSchedule models.ReleaseSchedule
 
+					//map to struct
 					err = results.Scan(&releaseSchedule.Id, &releaseSchedule.ReleaseOn, &releaseSchedule.ReleaseProject, &releaseSchedule.ReleaseVersion, &releaseSchedule.Released, &releaseSchedule.CreatedAt, &releaseSchedule.CreatedBy)
 
 					if err != nil {
 						log.Printf(err.Error())
 					}
 
+					//parse and check time
 					converted, _ := time.Parse(time.Kitchen, releaseSchedule.ReleaseOn)
 					t1 := time.Date(now.Year(), now.Month(), now.Day(), converted.Hour(), converted.Minute(), 0, 0, now.Location())
 					if now.After(t1) {
+						//time ok
 						log.Println("OK Release", releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion)
 						//update to 1
 						callJenkins(releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion, false, "0000")
@@ -181,20 +185,26 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 	if strings.Contains(text, "my id") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hey <@%s> your id is %s", user.ID, user.ID)
+		attachment.Text = fmt.Sprintf("Psst <@%s> your slack id is %s", user.ID, user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "how to schedule release") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hey <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma in Asia/Singapore timezone'", user.ID)
+		attachment.Text = fmt.Sprintf("Easy <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma in Asia/Singapore timezone'", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "Example: schedule release logistics-backend <<backend-1.1.0-beta>> at 09:25PM"
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "how to release") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hey <@%s>, you just need to mention me with this message format 'release projectname <<version>>'", user.ID)
+		attachment.Text = fmt.Sprintf("Ok <@%s>, you just need to mention me with this message format 'release projectname <<version>>'", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "Example: release logistics-backend <<backend-1.1.0-beta>>"
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "help") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Howdy <@%s>, this is the availble command list\n 1. how to schedule release \n 2. how to release \n 3. project list \n 4. who are you \n 5. schedule release ... \n 6. release ... ", user.ID)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Footer = "Example: schedule release logistics-backend <<backend-1.1.0-beta>> at 09:25PM"
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "project list") {
 		// Send a message to the user
@@ -203,7 +213,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "who are you") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hey <@%s>, I'm ~Snow King~ GRIP Bot that handle release or deploy a project to server", user.ID)
+		attachment.Text = fmt.Sprintf("Yo <@%s>, I'm ~Snow King~ I mean Bot that handle release or deploy a project to server and living in GRIP Principle Slack 😁😁", user.ID)
 		attachment.Footer = "Build using Go."
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "schedule release") {
@@ -219,24 +229,24 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 				if timeMatch != nil {
 					if contains(projectList, match[1]) {
-						attachment.Text = fmt.Sprintf("Ok <@%s>, Create release schedule for %s version %s at %s", user.ID, match[1], match[2], timeInput)
+						attachment.Text = fmt.Sprintf("Roger <@%s>, Create release schedule for %s version %s at %s", user.ID, match[1], match[2], timeInput)
 						attachment.Color = "#4af030"
 						attachment.Footer = "GRIP Release Bot create release schedule."
 
 						createSchedule(match[1], match[2], timeInput, user.Name)
 					} else {
-						attachment.Text = fmt.Sprintf("Hi <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
+						attachment.Text = fmt.Sprintf("Sorry <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
 						attachment.Color = "#e20228"
 						attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 					}
 				} else {
-					attachment.Text = fmt.Sprintf("Hi <@%s>, looks like your time format is wrong, should be hh:mma in Asia/Singapore timezone, e.g 09:00PM", user.ID)
+					attachment.Text = fmt.Sprintf("Sorry <@%s>, looks like your time format is wrong, should be hh:mma in Asia/Singapore timezone, e.g 09:00PM", user.ID)
 					attachment.Color = "#e20228"
 					attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 				}
 
 			} else {
-				attachment.Text = fmt.Sprintf("Hi <@%s>, you need to tell me the project name, version, and the release time, or make sure the message format is correct, use command 'how to schedule release' to see the format 😉", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, you need to tell me the project name, version, and the release time, or make sure the message format is correct, use command 'how to schedule release' to see the format 😉", user.ID)
 				attachment.Color = "#e20228"
 				attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 			}
@@ -253,20 +263,20 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 			if match != nil {
 				if contains(projectList, match[1]) {
-					attachment.Text = fmt.Sprintf("Ok <@%s>, Releasing %s version %s", user.ID, match[1], match[2])
+					attachment.Text = fmt.Sprintf("Affirmative <@%s>, Releasing %s version %s now.", user.ID, match[1], match[2])
 					attachment.Color = "#4af030"
 					attachment.Footer = "GRIP Release Bot calling Jenkins..."
 
 					callJenkins(match[1], match[2], false, "0000")
 					log.Println(match[1], match[2])
 				} else {
-					attachment.Text = fmt.Sprintf("Hi <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
+					attachment.Text = fmt.Sprintf("Sorry <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
 					attachment.Color = "#e20228"
 					attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 				}
 
 			} else {
-				attachment.Text = fmt.Sprintf("Hi <@%s>, you need to tell me the project name & version, or make sure the message format is correct, use command 'how to release' to see the format 😉", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, you need to tell me the project name & version, or make sure the message format is correct, use command 'how to release' to see the format 😉", user.ID)
 				attachment.Color = "#e20228"
 				attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
 			}
