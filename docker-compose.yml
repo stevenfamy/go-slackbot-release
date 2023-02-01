@@ -9,6 +9,6 @@ services:
     container_name: slackbot-release
     restart: unless-stopped
     environment:
-      - DOPPLER_TOKEN={{DOPPLER_TOKEN_AUTH}}
+      - DOPPLER_TOKEN=${DOPPLER_TOKEN_AUTH}
     # env_file:
     #   - .env
