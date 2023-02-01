@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -393,11 +394,11 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 	jenkinsWebhook := "http://" + jenkinsAddress + "/generic-webhook-trigger/invoke?token=" + jenkinsToken + "&buildEnv=production&release_version=" + version + "&project_id=null&release_id=null&release_timer=" + strconv.FormatBool(isSchedule) + "&release_at=" + time + "&test_release=" + strconv.FormatBool(isTesting)
 
 	// fmt.Println(jenkinsWebhook)
-	// _, err := http.Get(jenkinsWebhook)
-	fmt.Println(jenkinsWebhook)
-	// if err != nil {
-	// 	log.Println("error calling webhooks: " + err.Error())
-	// }
+	_, err := http.Get(jenkinsWebhook)
+
+	if err != nil {
+		log.Println("error calling webhooks: " + err.Error())
+	}
 }
 
 func createSchedule(project string, version string, endTime string, createdBy string) {
