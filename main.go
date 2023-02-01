@@ -1,0 +1,358 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"html"
+	"log"
+	"net/http"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/slack-go/slack"
+	"github.com/slack-go/slack/slackevents"
+	"github.com/slack-go/slack/socketmode"
+	"github.com/stevenfamy/go-slackbot-release/config"
+	"github.com/stevenfamy/go-slackbot-release/models"
+)
+
+func main() {
+	models.ConnectDatabase()
+
+	//define 1 minutes ticker
+	ticker := time.NewTicker(5 * time.Second)
+	tickerChan := make(chan bool)
+
+	// Load config
+	token := config.GetConfig("SLACK_AUTH_TOKEN")
+	appToken := config.GetConfig("SLACK_APP_TOKEN")
+
+	// Create a new client to slack by giving token
+	// Set debug to true while developing
+	// Also add a ApplicationToken option to the client
+	client := slack.New(token, slack.OptionDebug(false), slack.OptionAppLevelToken(appToken))
+
+	// go-slack comes with a SocketMode package that we need to use that accepts a Slack client and outputs a Socket mode client instead
+	socket := socketmode.New(
+		client,
+		socketmode.OptionDebug(false),
+		// Option to set a custom logger
+		socketmode.OptionLog(log.New(os.Stdout, "socketmode: ", log.Lshortfile|log.LstdFlags)),
+	)
+
+	// Create a context that can be used to cancel goroutine
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Make this cancel called properly in a real program , graceful shutdown etc
+	defer cancel()
+
+	//thread for receiving event from slack
+	go func(ctx context.Context, client *slack.Client, socket *socketmode.Client) {
+		// Create a for loop that selects either the context cancellation or the events incomming
+		for {
+			select {
+			// inscase context cancel is called exit the goroutine
+			case <-ctx.Done():
+				log.Println("Shutting down socketmode listener")
+				return
+			case event := <-socket.Events:
+				// We have a new Events, let's type switch the event
+				// Add more use cases here if you want to listen to other events.
+				switch event.Type {
+				// handle EventAPI events
+				case socketmode.EventTypeEventsAPI:
+					// The Event sent on the channel is not the same as the EventAPI events so we need to type cast it
+					eventsAPI, ok := event.Data.(slackevents.EventsAPIEvent)
+					if !ok {
+						log.Printf("Could not type cast the event to the EventsAPIEvent: %v\n", event)
+						continue
+					}
+					// We need to send an Acknowledge to the slack server
+					socket.Ack(*event.Request)
+					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
+
+					//log.Println(eventsAPI) // commenting for event hanndling
+
+					//------------------------------------
+					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
+					err := HandleEventMessage(eventsAPI, client)
+					if err != nil {
+						// Replace with actual err handeling
+						log.Fatal(err)
+					}
+				}
+			}
+		}
+	}(ctx, client, socket)
+
+	//thread of looping ticker to check every minutes
+	go func() {
+		for {
+			select {
+			case <-tickerChan:
+				return
+			// interval task
+			case tm := <-ticker.C:
+
+				//get time now in +8
+				location, _ := time.LoadLocation("Asia/Singapore")
+				now := tm.In(location)
+
+				///get schedule from db
+				results, err := models.DB.Query("SELECT * FROM release_schedule WHERE released = 0")
+
+				if err != nil {
+					log.Printf(err.Error())
+				}
+
+				for results.Next() {
+					var releaseSchedule models.ReleaseSchedule
+
+					err = results.Scan(&releaseSchedule.Id, &releaseSchedule.ReleaseOn, &releaseSchedule.ReleaseProject, &releaseSchedule.ReleaseVersion, &releaseSchedule.Released, &releaseSchedule.CreatedAt, &releaseSchedule.CreatedBy)
+
+					if err != nil {
+						log.Printf(err.Error())
+					}
+
+					converted, _ := time.Parse(time.Kitchen, releaseSchedule.ReleaseOn)
+					t1 := time.Date(now.Year(), now.Month(), now.Day(), converted.Hour(), converted.Minute(), 0, 0, now.Location())
+					if now.After(t1) {
+						log.Println("OK Release", releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion)
+						//update to 1
+						_, err := models.DB.Query("UPDATE release_schedule set released = 1 where id = ?", releaseSchedule.Id)
+						if err != nil {
+							log.Printf(err.Error())
+						}
+
+					} else {
+						log.Println("Time not match yet", releaseSchedule.Id)
+					}
+				}
+			}
+		}
+	}()
+
+	socket.Run()
+}
+
+// HandleEventMessage will take an event and handle it properly based on the type of event
+func HandleEventMessage(event slackevents.EventsAPIEvent, client *slack.Client) error {
+	switch event.Type {
+	// First we check if this is an CallbackEvent
+	case slackevents.CallbackEvent:
+		log.Println("received slack event")
+		innerEvent := event.InnerEvent
+		// Yet Another Type switch on the actual Data to see if its an AppMentionEvent
+		switch ev := innerEvent.Data.(type) {
+		case *slackevents.AppMentionEvent:
+			// The application has been mentioned since this Event is a Mention event
+			err := HandleAppMentionEventToBot(ev, client)
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		return errors.New("unsupported event type")
+	}
+	return nil
+}
+
+// HandleAppMentionEventToBot is used to take care of the AppMentionEvent when the bot is mentioned
+func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slack.Client) error {
+
+	// Grab the user name based on the ID of the one who mentioned the bot
+	user, err := client.GetUserInfo(event.User)
+	if err != nil {
+		return err
+	}
+	// Check if the user said Hello to the bot
+	text := strings.ToLower(html.UnescapeString(event.Text))
+
+	// Create the attachment and assigned based on the message
+	attachment := slack.Attachment{}
+
+	//Id list that have permission to release
+	//steven, pales, ilham, dzul, mas brad, fajar
+	uid := []string{"UR3D1N1QT", "D01HXHHK0N7", "D03KHNZU0P5", "D047KGDDMKQ", "DR6UJPEDP", "D01HYERALAK"}
+
+	projectList := []string{"grip-learning", "logistics-backend", "logistics-web", "logistics-mobile", "smartapes"}
+
+	if strings.Contains(text, "my id") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Hey <@%s> your id is %s", user.ID, user.ID)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "how to schedule release") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Hey <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma'", user.ID)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Footer = "Example: schedule release logistics-backend <<backend-1.1.0-beta>> at 09:25PM"
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "how to release") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Hey <@%s>, you just need to mention me with this message format 'release projectname <<version>>'", user.ID)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Footer = "Example: release logistics-backend <<backend-1.1.0-beta>>"
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "project list") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Hey <@%s>, this is supported project %s", user.ID, projectList)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "who are you") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Hey <@%s>, I'm ~Snow King~ GRIP Bot that handle release or deploy a project to server", user.ID)
+		attachment.Footer = "Build using Go."
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "schedule release") {
+		if contains(uid, user.ID) {
+
+			re := regexp.MustCompile(`schedule release ([^}]*) \<<([^}]*)\>> at ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+
+			if match != nil {
+				timeInput := strings.ToUpper(match[3])
+				timeRegex := regexp.MustCompile(`^(0?[1-9]|1[012]):([0-5][0-9])[AP]M$`)
+				timeMatch := timeRegex.FindStringSubmatch(timeInput)
+
+				if timeMatch != nil {
+					if contains(projectList, match[1]) {
+						attachment.Text = fmt.Sprintf("Ok <@%s>, Create release schedule for %s version %s at %s", user.ID, match[1], match[2], timeInput)
+						attachment.Color = "#4af030"
+						attachment.Footer = "GRIP Release Bot create release schedule."
+
+						createSchedule(match[1], match[2], timeInput, user.Name)
+					} else {
+						attachment.Text = fmt.Sprintf("Hi <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
+						attachment.Color = "#e20228"
+						attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
+					}
+				} else {
+					attachment.Text = fmt.Sprintf("Hi <@%s>, looks like your time format is wrong, should be hh:mma, e.g 09:00PM", user.ID)
+					attachment.Color = "#e20228"
+					attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
+				}
+
+			} else {
+				attachment.Text = fmt.Sprintf("Hi <@%s>, you need to tell me the project name, version, and the release time, or make sure the message format is correct, use command 'how to schedule release' to see the format 😉", user.ID)
+				attachment.Color = "#e20228"
+				attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
+			}
+		} else {
+			attachment.Text = "Sorry you don't have permission 🙏"
+			attachment.Color = "#e20228"
+			attachment.Footer = "GRIP Release Bot cannot continue"
+		}
+	} else if strings.Contains(text, "release") {
+		if contains(uid, user.ID) {
+
+			re := regexp.MustCompile(`release ([^}]*) \<<([^}]*)\>>.*`)
+			match := re.FindStringSubmatch(text)
+
+			if match != nil {
+				if contains(projectList, match[1]) {
+					attachment.Text = fmt.Sprintf("Ok <@%s>, Releasing %s version %s", user.ID, match[1], match[2])
+					attachment.Color = "#4af030"
+					attachment.Footer = "GRIP Release Bot calling Jenkins..."
+
+					callJenkins(match[1], match[2], false, "0000")
+					log.Println(match[1], match[2])
+				} else {
+					attachment.Text = fmt.Sprintf("Hi <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
+					attachment.Color = "#e20228"
+					attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
+				}
+
+			} else {
+				attachment.Text = fmt.Sprintf("Hi <@%s>, you need to tell me the project name & version, or make sure the message format is correct, use command 'how to release' to see the format 😉", user.ID)
+				attachment.Color = "#e20228"
+				attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
+			}
+		} else {
+			attachment.Text = "Sorry you don't have permission 🙏"
+			attachment.Color = "#e20228"
+			attachment.Footer = "GRIP Release Bot cannot continue"
+		}
+	} else {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Hi <@%s>", user.ID)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Color = "#563a9b"
+	}
+
+	// Send the message to the channel
+	// The Channel is available in the event message
+	_, _, err = client.PostMessage(event.Channel, slack.MsgOptionAttachments(attachment))
+	if err != nil {
+		return fmt.Errorf("failed to post message: %w", err)
+	}
+	return nil
+}
+
+func callJenkins(project string, version string, isSchedule bool, time string) {
+	env := config.GetConfig("ENVIRONMENT")
+	isTesting := true
+	jenkinsAddress := config.GetConfig("JENKINS_HOST")
+	jenkinsToken := ""
+
+	if env == "production" {
+		isTesting = false
+	}
+
+	switch project {
+	case "logistics-backend":
+		log.Printf("Execute webhook logistics-backend")
+
+		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_BACKEND_TOKEN")
+
+	case "logistics-web":
+		log.Printf("Execute webhook logistics-web")
+
+		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_WEB_TOKEN")
+
+	case "logistics-mobile":
+		log.Printf("Execute webhook logistics-mobile")
+
+		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_MOBILE_TOKEN")
+
+	case "grip-learning":
+		log.Printf("Execute webhook grip-learning")
+
+	case "smartapes":
+		log.Printf("Execute webhook grip-learning")
+
+	default:
+		log.Printf("Not calling webhooks")
+	}
+
+	jenkinsWebhook := "http://" + jenkinsAddress + "/generic-webhook-trigger/invoke?token=" + jenkinsToken + "&buildEnv=production&release_version=" + version + "&project_id=null&release_id=null&release_timer=" + strconv.FormatBool(isSchedule) + "&release_at=" + time + "&test_release=" + strconv.FormatBool(isTesting)
+
+	// fmt.Println(jenkinsWebhook)
+	_, err := http.Get(jenkinsWebhook)
+
+	if err != nil {
+		log.Println("error calling webhooks: " + err.Error())
+	}
+}
+
+func createSchedule(project string, version string, endTime string, createdBy string) {
+	//write to db
+	_, err := models.DB.Query("INSERT INTO release_schedule values (?,?,?,?,?,?,?)", uuid.New(), strings.ToUpper(endTime), project, version, 0, time.Now().Unix(), createdBy)
+	if err != nil {
+		log.Printf(err.Error())
+	}
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}

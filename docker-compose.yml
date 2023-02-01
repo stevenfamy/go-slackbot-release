@@ -1,0 +1,14 @@
+version: "3.3"
+
+services:
+  slackbot-release:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: grip/slackbot-release:latest
+    container_name: slackbot-release
+    restart: unless-stopped
+    environment:
+      - DOPPLER_TOKEN=dp.st.stg.AyycAkKEp5A9A0KfBt0e9dvedH5AO5b0jqwcik60M3t
+    # env_file:
+    #   - .env
