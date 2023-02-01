@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html"
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -190,9 +189,15 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "how to schedule release") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Easy <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma in Asia/Singapore timezone'", user.ID)
+		attachment.Text = fmt.Sprintf("Easy <@%s>, you just need to mention me with this message format 'schedule release projectname <<version>> at hh:mma' in Asia/Singapore timezone", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "Example: schedule release logistics-backend <<backend-1.1.0-beta>> at 09:25PM"
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "how to remove schedule") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Easy <@%s>, you just need to mention me with this message format 'remove schedule id'", user.ID)
+		// attachment.Pretext = "How can I be of service"
+		attachment.Footer = "Example: remove schedule 7ede5801-f6bb-4eaf-926f-54ee7f65905c "
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "how to release") {
 		// Send a message to the user
@@ -202,7 +207,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "help") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to release \n 3. project list \n 4. who are you \n 5. schedule release ... \n 6. release ... ", user.ID)
+		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to remove schedule \n 3. how to release \n 4. project list \n 5. who are you \n 6. schedule release ... \n 7. release ... \n 8. active schedule \n 9. remove schedule ...", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "GRIP Release Bot."
 		attachment.Color = "#563a9b"
@@ -216,6 +221,40 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Text = fmt.Sprintf("Yo <@%s>, I'm ~Snow King~ I mean Bot that handle release or deploy a project to server and living in GRIP Principle Slack 😁😁", user.ID)
 		attachment.Footer = "Build using Go."
 		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "active schedule") {
+		// Send a message to the user
+		result := models.GetActiveRelease()
+		if result == "" {
+			attachment.Text = fmt.Sprintf("Woah <@%s>, currently no active schedule", user.ID)
+		} else {
+			attachment.Text = fmt.Sprintf("Wow <@%s>, this is the active schedule: \n\n %s", user.ID, result)
+		}
+		attachment.Footer = "Build using Go."
+		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "remove schedule") {
+		if contains(uid, user.ID) {
+
+			re := regexp.MustCompile(`remove schedule ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			fmt.Println(text)
+			if match != nil {
+				result := models.CheckActiveRelease(match[1])
+				if !result {
+					attachment.Text = fmt.Sprintf("Hmm <@%s>, no active schedule with this Id", user.ID)
+				} else {
+					models.UpdateReleased(match[1])
+					attachment.Text = fmt.Sprintf("Noted <@%s>, this schedule is removed :noted:", user.ID)
+				}
+				attachment.Footer = "Build using Go."
+				attachment.Color = "#4af030"
+
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, You need to supply the active schedule id", user.ID)
+				attachment.Color = "#e20228"
+				attachment.Footer = fmt.Sprintf("GRIP Release Bot cannot continue, '%s'", text)
+			}
+		}
+
 	} else if strings.Contains(text, "schedule release") {
 		if contains(uid, user.ID) {
 
@@ -349,11 +388,11 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 	jenkinsWebhook := "http://" + jenkinsAddress + "/generic-webhook-trigger/invoke?token=" + jenkinsToken + "&buildEnv=production&release_version=" + version + "&project_id=null&release_id=null&release_timer=" + strconv.FormatBool(isSchedule) + "&release_at=" + time + "&test_release=" + strconv.FormatBool(isTesting)
 
 	// fmt.Println(jenkinsWebhook)
-	_, err := http.Get(jenkinsWebhook)
-
-	if err != nil {
-		log.Println("error calling webhooks: " + err.Error())
-	}
+	// _, err := http.Get(jenkinsWebhook)
+	fmt.Println(jenkinsWebhook)
+	// if err != nil {
+	// 	log.Println("error calling webhooks: " + err.Error())
+	// }
 }
 
 func createSchedule(project string, version string, endTime string, createdBy string) {
