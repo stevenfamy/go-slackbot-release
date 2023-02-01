@@ -181,7 +181,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	//steven, pales, ilham, dzul, mas brad, fajar
 	uid := []string{"UR3D1N1QT", "D01HXHHK0N7", "D03KHNZU0P5", "D047KGDDMKQ", "DR6UJPEDP", "D01HYERALAK"}
 
-	projectList := []string{"grip-learning", "logistics-backend", "logistics-web", "logistics-mobile", "smartapes"}
+	projectList := []string{"gla-platform", "gla-parent", "logistics-backend", "logistics-web", "logistics-mobile"}
 
 	if strings.Contains(text, "my id") {
 		// Send a message to the user
@@ -202,9 +202,9 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "help") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Howdy <@%s>, this is the availble command list\n 1. how to schedule release \n 2. how to release \n 3. project list \n 4. who are you \n 5. schedule release ... \n 6. release ... ", user.ID)
+		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to release \n 3. project list \n 4. who are you \n 5. schedule release ... \n 6. release ... ", user.ID)
 		// attachment.Pretext = "How can I be of service"
-		attachment.Footer = "Example: schedule release logistics-backend <<backend-1.1.0-beta>> at 09:25PM"
+		attachment.Footer = "GRIP Release Bot."
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "project list") {
 		// Send a message to the user
@@ -327,11 +327,20 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 
 		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_MOBILE_TOKEN")
 
-	case "grip-learning":
-		log.Printf("Execute webhook grip-learning")
+	case "gla-platform":
+		log.Printf("Execute webhook gla-platform")
 
-	case "smartapes":
-		log.Printf("Execute webhook grip-learning")
+		jenkinsToken = config.GetConfig("JENKINS_GLA_PLATFORM_TOKEN")
+
+	case "gla-parent":
+		log.Printf("Execute webhook gla-parent")
+
+		jenkinsToken = config.GetConfig("JENKINS_GLA_PARENT_TOKEN")
+
+	// case "smartapes":
+	// 	log.Printf("Execute webhook smartapes")
+
+	// 	jenkinsToken = config.GetConfig("JENKINS_SMARTAPES_TOKEN")
 
 	default:
 		log.Printf("Not calling webhooks")
