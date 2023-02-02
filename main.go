@@ -183,7 +183,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	uid := []string{"UR3D1N1QT", "U01HXH4NEKD", "U03L7H19YDN", "U047S4Y16RY", "UP0GN0K8A", "U01JDE4EGHZ"}
 	// specialUid := []string{""}
 
-	projectList := []string{"gla-platform", "gla-parent", "logistics-backend", "logistics-web", "logistics-mobile"}
+	projectList := []string{"gla-platform", "gla-parent", "gla-admin", "logistics-backend", "logistics-web", "logistics-mobile"}
 
 	if strings.Contains(text, "my id") {
 		// Send a message to the user
@@ -388,6 +388,10 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 
 		jenkinsToken = config.GetConfig("JENKINS_GLA_PARENT_TOKEN")
 
+	case "gla-admin":
+		log.Printf("Execute webhook gla-admin")
+
+		jenkinsToken = config.GetConfig("JENKINS_GLA_ADMIN_TOKEN")
 	// case "smartapes":
 	// 	log.Printf("Execute webhook smartapes")
 
