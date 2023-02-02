@@ -179,7 +179,8 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 	//Id list that have permission to release
 	//steven, pales, ilham, dzul, mas brad, fajar
-	uid := []string{"UR3D1N1QT", "D01HXHHK0N7", "D03KHNZU0P5", "D047KGDDMKQ", "DR6UJPEDP", "D01HYERALAK"}
+	//need to move to db rather tha hardcode
+	uid := []string{"UR3D1N1QT", "U01HXH4NEKD", "U03L7H19YDN", "U047S4Y16RY", "UP0GN0K8A", "U01JDE4EGHZ"}
 	// specialUid := []string{""}
 
 	projectList := []string{"gla-platform", "gla-parent", "logistics-backend", "logistics-web", "logistics-mobile"}
@@ -258,7 +259,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		}
 	} else if strings.Contains(text, "schedule release") {
 		if contains(uid, user.ID) {
-
+			fmt.Println("schedule release is executed", text)
 			re := regexp.MustCompile(`schedule release ([^}]*) \<<([^}]*)\>> at ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 
@@ -326,7 +327,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			attachment.Footer = "GRIP Release Bot cannot continue"
 		}
 	} else {
-		if user.ID == "D023A1DFQMD" {
+		if user.ID == "U023A0BJUB1" {
 			attachment.Text = ":ice_cube: :tea:"
 			attachment.Color = "#FF00FF"
 		} else {
