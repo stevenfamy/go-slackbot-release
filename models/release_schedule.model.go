@@ -55,7 +55,7 @@ func GetActiveRelease() string {
 func CheckActiveRelease(Id string) bool {
 	var releaseSchedule ReleaseSchedule
 
-	err := DB.QueryRow("Select * from release_schedule where id = ?", Id).Scan(&releaseSchedule.Id, &releaseSchedule.ReleaseOn, &releaseSchedule.ReleaseProject, &releaseSchedule.ReleaseVersion, &releaseSchedule.Released, &releaseSchedule.CreatedAt, &releaseSchedule.CreatedBy)
+	err := DB.QueryRow("Select * from release_schedule where id = ? and released = 0", Id).Scan(&releaseSchedule.Id, &releaseSchedule.ReleaseOn, &releaseSchedule.ReleaseProject, &releaseSchedule.ReleaseVersion, &releaseSchedule.Released, &releaseSchedule.CreatedAt, &releaseSchedule.CreatedBy)
 
 	return err == nil
 }
