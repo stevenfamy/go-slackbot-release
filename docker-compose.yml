@@ -10,5 +10,10 @@ services:
     restart: unless-stopped
     environment:
       - DOPPLER_TOKEN=${DOPPLER_TOKEN_AUTH}
+    networks:
+      - logistics-staging
     # env_file:
     #   - .env
+networks:
+  logistics-staging:
+    external: true
