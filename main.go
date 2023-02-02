@@ -224,6 +224,11 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Text = fmt.Sprintf("Yo <@%s>, I'm ~Snow King~ I mean Bot that handle release or deploy a project to server and living in GRIP Principle Slack 😁😁", user.ID)
 		attachment.Footer = "Build using Go."
 		attachment.Color = "#563a9b"
+	} else if strings.Contains(text, "env") {
+		// Send a message to the user
+		attachment.Text = fmt.Sprintf("Bibop <@%s>, current env is set to %s", user.ID, config.GetConfig("ENVIRONMENT"))
+		attachment.Footer = "Build using Go."
+		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "active schedule") {
 		// Send a message to the user
 		result := models.GetActiveRelease()
