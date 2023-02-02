@@ -45,7 +45,7 @@ func GetActiveRelease() string {
 		temp, _ := strconv.ParseInt(strconv.Itoa(releaseSchedule.CreatedAt), 10, 64)
 		location, _ := time.LoadLocation("Asia/Singapore")
 		tempDate := time.Unix(temp, 0).In(location)
-		tempList += fmt.Sprintf("%s. *%s* > %s \n\t Will be release on: %s \n\t Id: %s \n\t Created by: %s \n\t Created on: %s \n\n", strconv.Itoa(i), releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion, releaseSchedule.ReleaseOn, releaseSchedule.Id, releaseSchedule.CreatedBy, tempDate.String())
+		tempList += fmt.Sprintf("%s. *%s* > %s \n\t Will be release on: %s (Asia/Singapore) \n\t Id: %s \n\t Created by: %s \n\t Created on: %s \n\n", strconv.Itoa(i), releaseSchedule.ReleaseProject, releaseSchedule.ReleaseVersion, releaseSchedule.ReleaseOn, releaseSchedule.Id, releaseSchedule.CreatedBy, tempDate.String())
 		i++
 	}
 
