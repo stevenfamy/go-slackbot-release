@@ -178,9 +178,9 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	attachment := slack.Attachment{}
 
 	//Id list that have permission to release
-	//steven, pales, ilham, dzul, mas brad, fajar
+	//steven, pales, ilham, fajar, vincent
 	//need to move to db rather tha hardcode
-	uid := []string{"UR3D1N1QT", "U01HXH4NEKD", "U03L7H19YDN", "U047S4Y16RY", "UP0GN0K8A", "U01JDE4EGHZ"}
+	uid := []string{"UR3D1N1QT", "U01HXH4NEKD", "U03L7H19YDN", "U01JDE4EGHZ", "U02SXCNV8JF"}
 	// specialUid := []string{""}
 
 	projectList := []string{"gla-platform", "gla-parent", "gla-admin", "logistics-backend", "logistics-web", "logistics-mobile"}
