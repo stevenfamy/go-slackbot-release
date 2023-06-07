@@ -15,10 +15,11 @@ type SlackUserAccess struct {
 	Status   bool   `json:"status"`
 	AddedAt  int    `json:"added_at"`
 	FullName string `json:"full_name"`
+	Roles    int    `json:"roles"`
 }
 
 func AddNewUser(SlackId string, FullName string) {
-	_, err := DB.Query("INSERT INTO slack_user_access values (?,?,?,?,?)", uuid.New(), SlackId, true, time.Now().Unix(), FullName)
+	_, err := DB.Query("INSERT INTO slack_user_access values (?,?,?,?,?,?)", uuid.New(), SlackId, true, time.Now().Unix(), FullName, 0)
 	if err != nil {
 		log.Print(err.Error())
 	}
