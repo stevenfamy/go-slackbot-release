@@ -239,7 +239,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Footer = "Build using Go."
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "remove schedule") {
-		if contains(uid, user.ID) {
+		if models.UserHasAccess((user.ID)) {
 
 			re := regexp.MustCompile(`remove schedule ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
@@ -262,7 +262,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			}
 		}
 	} else if strings.Contains(text, "schedule release") {
-		if contains(uid, user.ID) {
+		if models.UserHasAccess((user.ID)) {
 			fmt.Println("schedule release is executed", text)
 			re := regexp.MustCompile(`schedule release ([^}]*) \<<([^}]*)\>> at ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
@@ -301,7 +301,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			attachment.Footer = "GRIP Release Bot cannot continue"
 		}
 	} else if strings.Contains(text, "release") {
-		if contains(uid, user.ID) {
+		if models.UserHasAccess((user.ID)) {
 
 			re := regexp.MustCompile(`release ([^}]*) \<<([^}]*)\>>.*`)
 			match := re.FindStringSubmatch(text)
@@ -349,6 +349,48 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 				attachment.Text = fmt.Sprintf("Roger <@%s>, Adding access for %s.", user.ID, match[2])
 
 				models.AddNewUser(match[1], match[2])
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "delete access") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`delete access ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Removing access for %s.", user.ID, match[1])
+
+				models.DeleteUserAccess(match[1])
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "enable access") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`enable access ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Enabling access for %s.", user.ID, match[1])
+
+				models.ToogleUserStatus(match[1], true)
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "disable access") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`disable access ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Disabling access for %s.", user.ID, match[1])
+
+				models.ToogleUserStatus(match[1], false)
 			} else {
 				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
 			}
