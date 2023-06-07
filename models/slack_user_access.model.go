@@ -85,3 +85,10 @@ func UserIsAdmin(SlackId string) bool {
 
 	return err == nil
 }
+func UserHasAccess(SlackId string) bool {
+	var slackUserAccess SlackUserAccess
+
+	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and status = 1", SlackId).Scan(&slackUserAccess.Id)
+
+	return err == nil
+}
