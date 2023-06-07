@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,7 +20,7 @@ type SlackUserAccess struct {
 }
 
 func AddNewUser(SlackId string, FullName string) {
-	_, err := DB.Query("INSERT INTO slack_user_access values (?,?,?,?,?,?)", uuid.New(), SlackId, true, time.Now().Unix(), FullName, 0)
+	_, err := DB.Query("INSERT INTO slack_user_access values (?,?,?,?,?,?)", uuid.New(), strings.ToUpper(SlackId), true, time.Now().Unix(), FullName, 0)
 	if err != nil {
 		log.Print(err.Error())
 	}
@@ -49,7 +50,7 @@ func GetAllUsers() string {
 		if !slackUserAccess.Status {
 			tempStatus = "Disabled"
 		}
-		tempList += fmt.Sprintf("%s. *%s* : %s (%s) \n\t", strconv.Itoa(i), slackUserAccess.FullName, slackUserAccess.SlackId, tempStatus)
+		tempList += fmt.Sprintf("%s. *%s* : %s (%s) \n\n", strconv.Itoa(i), slackUserAccess.FullName, slackUserAccess.SlackId, tempStatus)
 		i++
 	}
 
@@ -57,14 +58,14 @@ func GetAllUsers() string {
 }
 
 func DeleteUserAccess(SlackId string) {
-	_, err := DB.Query("DELETE from slack_user_access where slack_id = ?", SlackId)
+	_, err := DB.Query("DELETE from slack_user_access where slack_id = ?", strings.ToUpper(SlackId))
 	if err != nil {
 		log.Print(err.Error())
 	}
 }
 
 func ToogleUserStatus(SlackId string, UserStatus bool) {
-	_, err := DB.Query("UPDATE slack_user_access set status = ? where id = ?", UserStatus, SlackId)
+	_, err := DB.Query("UPDATE slack_user_access set status = ? where id = ?", UserStatus, strings.ToUpper(SlackId))
 	if err != nil {
 		log.Print(err.Error())
 	}
@@ -73,14 +74,14 @@ func ToogleUserStatus(SlackId string, UserStatus bool) {
 func UserIsAdmin(SlackId string) bool {
 	var slackUserAccess SlackUserAccess
 
-	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and roles = 1", SlackId).Scan(&slackUserAccess.Id)
+	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and status = 1 and roles = 1", strings.ToUpper(SlackId)).Scan(&slackUserAccess.Id)
 
 	return err == nil
 }
 func UserHasAccess(SlackId string) bool {
 	var slackUserAccess SlackUserAccess
 
-	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and status = 1", SlackId).Scan(&slackUserAccess.Id)
+	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and status = 1", strings.ToUpper(SlackId)).Scan(&slackUserAccess.Id)
 
 	return err == nil
 }
