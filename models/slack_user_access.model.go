@@ -26,7 +26,7 @@ func AddNewUser(SlackId string, FullName string) {
 }
 
 func GetAllUsers() string {
-	results, err := DB.Query("SELECT * FROM slack_user_access;")
+	results, err := DB.Query("SELECT slack_id, status, full_name FROM slack_user_access;")
 	if err != nil {
 		log.Print(err.Error())
 	}
@@ -36,7 +36,7 @@ func GetAllUsers() string {
 	for results.Next() {
 		var slackUserAccess SlackUserAccess
 
-		err = results.Scan(&slackUserAccess.Id, &slackUserAccess.SlackId, &slackUserAccess.Status, &slackUserAccess.AddedAt, &slackUserAccess.FullName)
+		err = results.Scan(&slackUserAccess.SlackId, &slackUserAccess.Status, &slackUserAccess.FullName)
 
 		if err != nil {
 			log.Print(err.Error())
@@ -66,7 +66,7 @@ func DeleteUserAccess(SlackId string) {
 func ToogleUserStatus(SlackId string) {
 	var slackUserAccess SlackUserAccess
 
-	err := DB.QueryRow("Select * from slack_user_access where slack_id = ?", SlackId).Scan(&slackUserAccess.Id, &slackUserAccess.SlackId, &slackUserAccess.Status, &slackUserAccess.AddedAt, &slackUserAccess.FullName)
+	err := DB.QueryRow("Select status from slack_user_access where slack_id = ?", SlackId).Scan(&slackUserAccess.Status)
 
 	if err != nil {
 		log.Print(err.Error())
@@ -76,4 +76,12 @@ func ToogleUserStatus(SlackId string) {
 	if err2 != nil {
 		log.Print(err.Error())
 	}
+}
+
+func UserIsAdmin(SlackId string) bool {
+	var slackUserAccess SlackUserAccess
+
+	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and roles = 1", SlackId).Scan(&slackUserAccess.Id)
+
+	return err == nil
 }
