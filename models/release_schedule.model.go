@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ReleaseSchedule struct {
@@ -17,17 +20,25 @@ type ReleaseSchedule struct {
 	CreatedBy      string `json:"created_by"`
 }
 
+func CreateSchedule(project string, version string, endTime string, createdBy string) {
+	//write to db
+	_, err := DB.Query("INSERT INTO release_schedule values (?,?,?,?,?,?,?)", uuid.New(), strings.ToUpper(endTime), project, version, 0, time.Now().Unix(), createdBy)
+	if err != nil {
+		log.Print(err.Error())
+	}
+}
+
 func UpdateReleased(Id string) {
 	_, err := DB.Query("UPDATE release_schedule set released = 1 where id = ?", Id)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 }
 
 func GetActiveRelease() string {
 	results, err := DB.Query("SELECT * FROM release_schedule WHERE released = 0")
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 	}
 
 	tempList := ""
@@ -39,7 +50,7 @@ func GetActiveRelease() string {
 		err = results.Scan(&releaseSchedule.Id, &releaseSchedule.ReleaseOn, &releaseSchedule.ReleaseProject, &releaseSchedule.ReleaseVersion, &releaseSchedule.Released, &releaseSchedule.CreatedAt, &releaseSchedule.CreatedBy)
 
 		if err != nil {
-			log.Printf(err.Error())
+			log.Print(err.Error())
 		}
 
 		temp, _ := strconv.ParseInt(strconv.Itoa(releaseSchedule.CreatedAt), 10, 64)

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -279,7 +278,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 						attachment.Color = "#4af030"
 						attachment.Footer = "GRIP Release Bot create release schedule."
 
-						createSchedule(match[1], match[2], timeInput, user.Name)
+						models.CreateSchedule(match[1], match[2], timeInput, user.Name)
 					} else {
 						attachment.Text = fmt.Sprintf("Sorry <@%s>, the project %s is not found, use command project list to see the supported project", user.ID, match[1])
 						attachment.Color = "#e20228"
@@ -352,6 +351,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	return nil
 }
 
+// self-explanatory
 func callJenkins(project string, version string, isSchedule bool, time string) {
 	env := config.GetConfig("ENVIRONMENT")
 	isTesting := true
@@ -408,14 +408,6 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 
 	if err != nil {
 		log.Println("error calling webhooks: " + err.Error())
-	}
-}
-
-func createSchedule(project string, version string, endTime string, createdBy string) {
-	//write to db
-	_, err := models.DB.Query("INSERT INTO release_schedule values (?,?,?,?,?,?,?)", uuid.New(), strings.ToUpper(endTime), project, version, 0, time.Now().Unix(), createdBy)
-	if err != nil {
-		log.Printf(err.Error())
 	}
 }
 
