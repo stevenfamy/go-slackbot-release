@@ -20,9 +20,9 @@ type ReleaseSchedule struct {
 	CreatedBy      string `json:"created_by"`
 }
 
-func CreateSchedule(project string, version string, endTime string, createdBy string) {
+func CreateSchedule(Project string, Version string, EndTime string, CreatedBy string) {
 	//write to db
-	_, err := DB.Query("INSERT INTO release_schedule values (?,?,?,?,?,?,?)", uuid.New(), strings.ToUpper(endTime), project, version, 0, time.Now().Unix(), createdBy)
+	_, err := DB.Query("INSERT INTO release_schedule values (?,?,?,?,?,?,?)", uuid.New(), strings.ToUpper(EndTime), Project, Version, 0, time.Now().Unix(), CreatedBy)
 	if err != nil {
 		log.Print(err.Error())
 	}
