@@ -63,17 +63,9 @@ func DeleteUserAccess(SlackId string) {
 	}
 }
 
-func ToogleUserStatus(SlackId string) {
-	var slackUserAccess SlackUserAccess
-
-	err := DB.QueryRow("Select status from slack_user_access where slack_id = ?", SlackId).Scan(&slackUserAccess.Status)
-
+func ToogleUserStatus(SlackId string, UserStatus bool) {
+	_, err := DB.Query("UPDATE slack_user_access set status = ? where id = ?", UserStatus, SlackId)
 	if err != nil {
-		log.Print(err.Error())
-	}
-
-	_, err2 := DB.Query("UPDATE slack_user_access set status = ? where id = ?", !slackUserAccess.Status, SlackId)
-	if err2 != nil {
 		log.Print(err.Error())
 	}
 }

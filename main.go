@@ -330,6 +330,38 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			attachment.Color = "#e20228"
 			attachment.Footer = "GRIP Release Bot cannot continue"
 		}
+	} else if strings.Contains(text, "access list") {
+		if models.UserIsAdmin((user.ID)) {
+			result := models.GetAllUsers()
+			if result != "" {
+				attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the access list: \n\n %s", user.ID, result)
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, access list is empty.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "add access") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`add access ([^}]*)\-([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Adding access for %s.", user.ID, match[2])
+
+				models.AddNewUser(match[1], match[2])
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "test access") {
+		if models.UserHasAccess((user.ID)) {
+			attachment.Text = fmt.Sprintf("Congrats <@%s>, you have the access", user.ID)
+
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
 	} else {
 		if user.ID == "U023A0BJUB1" {
 			attachment.Text = ":ice_cube: :tea:"
