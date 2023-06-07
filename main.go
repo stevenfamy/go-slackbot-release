@@ -360,7 +360,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			re := regexp.MustCompile(`delete access ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
-				attachment.Text = fmt.Sprintf("Roger <@%s>, Removing access for %s.", user.ID, match[1])
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Removing access for %s.", user.ID, strings.ToUpper(match[1]))
 
 				models.DeleteUserAccess(match[1])
 			} else {
@@ -374,7 +374,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			re := regexp.MustCompile(`enable access ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
-				attachment.Text = fmt.Sprintf("Roger <@%s>, Enabling access for %s.", user.ID, match[1])
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Enabling access for %s.", user.ID, strings.ToUpper(match[1]))
 
 				models.ToogleUserStatus(match[1], true)
 			} else {
@@ -388,7 +388,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			re := regexp.MustCompile(`disable access ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
-				attachment.Text = fmt.Sprintf("Roger <@%s>, Disabling access for %s.", user.ID, match[1])
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Disabling access for %s.", user.ID, strings.ToUpper(match[1]))
 
 				models.ToogleUserStatus(match[1], false)
 			} else {

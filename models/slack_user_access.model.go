@@ -65,7 +65,7 @@ func DeleteUserAccess(SlackId string) {
 }
 
 func ToogleUserStatus(SlackId string, UserStatus bool) {
-	_, err := DB.Query("UPDATE slack_user_access set status = ? where id = ?", UserStatus, strings.ToUpper(SlackId))
+	_, err := DB.Query("UPDATE slack_user_access set status = ? where slack_id = ?", UserStatus, strings.ToUpper(SlackId))
 	if err != nil {
 		log.Print(err.Error())
 	}
