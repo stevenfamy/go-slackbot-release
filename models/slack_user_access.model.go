@@ -27,7 +27,7 @@ func AddNewUser(SlackId string, FullName string) {
 }
 
 func GetAllUsers() string {
-	results, err := DB.Query("SELECT slack_id, status, full_name FROM slack_user_access where roles = 0;")
+	results, err := DB.Query("SELECT slack_id, status, full_name FROM slack_user_access where roles = 0 order by added_at;")
 	if err != nil {
 		log.Print(err.Error())
 	}
