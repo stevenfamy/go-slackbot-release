@@ -52,15 +52,34 @@ func GetAllProjects() string {
 }
 
 func DeleteProject(ProjectName string) {
-	_, err := DB.Query("DELETE from projects where project_name = ?", strings.ToUpper(ProjectName))
+	_, err := DB.Query("DELETE from projects where project_name = ?", strings.ToLower(ProjectName))
 	if err != nil {
 		log.Print(err.Error())
 	}
 }
 
 func ToogleProject(ProjectName string, ProjectStatus bool) {
-	_, err := DB.Query("UPDATE projects set status = ? where project_name = ?", ProjectStatus, strings.ToUpper(ProjectName))
+	_, err := DB.Query("UPDATE projects set status = ? where project_name = ?", ProjectStatus, strings.ToLower(ProjectName))
 	if err != nil {
 		log.Print(err.Error())
 	}
+}
+
+func ProjectIsAvailable(ProjectName string) bool {
+	var projects Projects
+
+	err := DB.QueryRow("Select id from projects where project_name = ? and status = 1", strings.ToLower(ProjectName)).Scan(&projects.Id)
+
+	return err == nil
+}
+
+func GetProjectToken(ProjectName string) string {
+	var projects Projects
+
+	row := DB.QueryRow("Select jenkins_token from projects where project_name = ? and status = 1", strings.ToLower(ProjectName)).Scan(&projects.JenkinsToken)
+
+	if row == nil {
+		return ""
+	}
+	return projects.JenkinsToken
 }

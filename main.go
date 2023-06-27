@@ -176,7 +176,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	// Create the attachment and assigned based on the message
 	attachment := slack.Attachment{}
 
-	projectList := []string{"gla-platform", "gla-parent", "gla-admin", "logistics-backend", "logistics-web", "logistics-mobile"}
+	// projectList := []string{"gla-platform", "gla-parent", "gla-admin", "logistics-backend", "logistics-web", "logistics-mobile"}
 
 	if strings.Contains(text, "my id") {
 		// Send a message to the user
@@ -262,7 +262,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 				timeMatch := timeRegex.FindStringSubmatch(timeInput)
 
 				if timeMatch != nil {
-					if contains(projectList, match[1]) {
+					if models.ProjectIsAvailable((match[1])) {
 						attachment.Text = fmt.Sprintf("Roger <@%s>, Create release schedule for %s version %s at %s", user.ID, match[1], match[2], timeInput)
 						attachment.Color = "#4af030"
 						attachment.Footer = "GRIP Release Bot create release schedule."
@@ -296,7 +296,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			match := re.FindStringSubmatch(text)
 
 			if match != nil {
-				if contains(projectList, match[1]) {
+				if models.ProjectIsAvailable((match[1])) {
 					attachment.Text = fmt.Sprintf("Affirmative <@%s>, Releasing %s version %s now.", user.ID, match[1], match[2])
 					attachment.Color = "#4af030"
 					attachment.Footer = "GRIP Release Bot calling Jenkins..."
@@ -460,6 +460,20 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		} else {
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
 		}
+	} else if strings.Contains(text, "test project") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`test project ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				result := models.GetProjectToken(match[1])
+
+				attachment.Text = fmt.Sprintf("Roger <@%s>, test project for %s, the token is %s", user.ID, strings.ToUpper(match[1]), result)
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'test project project-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
 	} else {
 		if user.ID == "U023A0BJUB1" {
 			attachment.Text = ":ice_cube: :tea:"
@@ -486,49 +500,10 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 	env := config.GetConfig("ENVIRONMENT")
 	isTesting := true
 	jenkinsAddress := config.GetConfig("JENKINS_HOST")
-	jenkinsToken := ""
+	jenkinsToken := models.GetProjectToken(project)
 
 	if env == "production" {
 		isTesting = false
-	}
-
-	switch project {
-	case "logistics-backend":
-		log.Printf("Execute webhook logistics-backend")
-
-		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_BACKEND_TOKEN")
-
-	case "logistics-web":
-		log.Printf("Execute webhook logistics-web")
-
-		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_WEB_TOKEN")
-
-	case "logistics-mobile":
-		log.Printf("Execute webhook logistics-mobile")
-
-		jenkinsToken = config.GetConfig("JENKINS_LOGISTICS_MOBILE_TOKEN")
-
-	case "gla-platform":
-		log.Printf("Execute webhook gla-platform")
-
-		jenkinsToken = config.GetConfig("JENKINS_GLA_PLATFORM_TOKEN")
-
-	case "gla-parent":
-		log.Printf("Execute webhook gla-parent")
-
-		jenkinsToken = config.GetConfig("JENKINS_GLA_PARENT_TOKEN")
-
-	case "gla-admin":
-		log.Printf("Execute webhook gla-admin")
-
-		jenkinsToken = config.GetConfig("JENKINS_GLA_ADMIN_TOKEN")
-	// case "smartapes":
-	// 	log.Printf("Execute webhook smartapes")
-
-	// 	jenkinsToken = config.GetConfig("JENKINS_SMARTAPES_TOKEN")
-
-	default:
-		log.Printf("Not calling webhooks")
 	}
 
 	jenkinsWebhook := "http://" + jenkinsAddress + "/generic-webhook-trigger/invoke?token=" + jenkinsToken + "&buildEnv=production&release_version=" + version + "&project_id=null&release_id=null&release_timer=" + strconv.FormatBool(isSchedule) + "&release_at=" + time + "&test_release=" + strconv.FormatBool(isTesting)
@@ -541,11 +516,11 @@ func callJenkins(project string, version string, isSchedule bool, time string) {
 	}
 }
 
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
+// func contains(s []string, str string) bool {
+// 	for _, v := range s {
+// 		if v == str {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
