@@ -176,12 +176,6 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	// Create the attachment and assigned based on the message
 	attachment := slack.Attachment{}
 
-	//Id list that have permission to release
-	//steven, pales, ilham, fajar, vincent
-	//need to move to db rather tha hardcode
-	// uid := []string{"UR3D1N1QT", "U01HXH4NEKD", "U03L7H19YDN", "U01JDE4EGHZ", "U02SXCNV8JF"}
-	// specialUid := []string{""}
-
 	projectList := []string{"gla-platform", "gla-parent", "gla-admin", "logistics-backend", "logistics-web", "logistics-mobile"}
 
 	if strings.Contains(text, "my id") {
@@ -212,11 +206,6 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to remove schedule \n 3. how to release \n 4. project list \n 5. who are you \n 6. schedule release ... \n 7. release ... \n 8. active schedule \n 9. remove schedule ...", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "GRIP Release Bot."
-		attachment.Color = "#563a9b"
-	} else if strings.Contains(text, "project list") {
-		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Hey <@%s>, this is supported project %s", user.ID, projectList)
-		// attachment.Pretext = "How can I be of service"
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "who are you") {
 		// Send a message to the user
@@ -364,7 +353,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 				models.DeleteUserAccess(match[1])
 			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'delete access SLACKID'.", user.ID)
 			}
 		} else {
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
@@ -378,7 +367,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 				models.ToogleUserStatus(match[1], true)
 			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'enable access SLACKID'.", user.ID)
 			}
 		} else {
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
@@ -392,7 +381,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 
 				models.ToogleUserStatus(match[1], false)
 			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add access SLACKID-name'.", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'disable access SLACKID'.", user.ID)
 			}
 		} else {
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
@@ -401,6 +390,73 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		if models.UserHasAccess((user.ID)) {
 			attachment.Text = fmt.Sprintf("Congrats <@%s>, you have the access", user.ID)
 
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "project list") {
+		if models.UserIsAdmin((user.ID)) {
+			result := models.GetAllProjects()
+			if result != "" {
+				attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the project list: \n\n %s", user.ID, result)
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, project list is empty.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "add project") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`add project ([^}]*)\-([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Adding project %s.", user.ID, match[1])
+
+				models.AddNewProject(match[1], match[2])
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add project project name-jenkins token'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "delete project") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`delete project ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Removing access for %s.", user.ID, strings.ToUpper(match[1]))
+
+				models.DeleteProject(match[1])
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'delete project project-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "enable project") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`enable project ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Enabling project for %s.", user.ID, strings.ToUpper(match[1]))
+
+				models.ToogleProject(match[1], true)
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'enable project project-name'.", user.ID)
+			}
+		} else {
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		}
+	} else if strings.Contains(text, "disable project") {
+		if models.UserIsAdmin((user.ID)) {
+			re := regexp.MustCompile(`disable project ([^}]*).*`)
+			match := re.FindStringSubmatch(text)
+			if match != nil {
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Disabling project for %s.", user.ID, strings.ToUpper(match[1]))
+
+				models.ToogleProject(match[1], false)
+			} else {
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'disable project project-name'.", user.ID)
+			}
 		} else {
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
 		}
