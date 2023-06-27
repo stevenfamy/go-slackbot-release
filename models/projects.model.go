@@ -24,7 +24,7 @@ func AddNewProject(ProjectName string, ProjectToken string) {
 }
 
 func GetAllProjects() string {
-	results, err := DB.Query("SELECT project_name, status, jenkins_token FROM projects;")
+	results, err := DB.Query("SELECT project_name, status, jenkins_token FROM projects order by project_name ASC;")
 	if err != nil {
 		log.Print(err.Error())
 	}
