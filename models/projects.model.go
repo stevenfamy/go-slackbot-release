@@ -79,7 +79,9 @@ func GetProjectToken(ProjectName string) string {
 	row := DB.QueryRow("Select jenkins_token from projects where project_name = ? and status = 1", strings.ToLower(ProjectName)).Scan(&projects.JenkinsToken)
 
 	if row == nil {
+		log.Print(row.Error())
 		return ""
 	}
+
 	return projects.JenkinsToken
 }
