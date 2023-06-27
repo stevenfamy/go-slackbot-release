@@ -203,7 +203,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "help") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to remove schedule \n 3. how to release \n 4. project list \n 5. who are you \n 6. schedule release ... \n 7. release ... \n 8. active schedule \n 9. remove schedule \n 10. access list \n 11. add access \n 12. delete access \n 13. enable access \n 14. disable access \n 15. test access \n 16. project list \n 17. add project \n 18. delete project \n 19. enable project \n 20. disable project \n 21. test project", user.ID)
+		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to remove schedule \n 3. how to release \n 4. project list \n 5. who are you \n 6. schedule release ... \n 7. release ... \n 8. active schedule \n 9. remove schedule \n 10. access list \n 11. add access \n 12. delete access \n 13. enable access \n 14. disable access \n 15. test access \n 16. project list \n 17. add project \n 18. delete project \n 19. enable project \n 20. disable project \n 21. test project \n 22. my id", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "GRIP Release Bot."
 		attachment.Color = "#563a9b"
