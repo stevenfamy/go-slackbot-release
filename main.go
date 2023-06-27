@@ -203,7 +203,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		attachment.Color = "#563a9b"
 	} else if strings.Contains(text, "help") {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to remove schedule \n 3. how to release \n 4. project list \n 5. who are you \n 6. schedule release ... \n 7. release ... \n 8. active schedule \n 9. remove schedule ...", user.ID)
+		attachment.Text = fmt.Sprintf("Howdy <@%s> :mixue:, this is the availble command list\n 1. how to schedule release \n 2. how to remove schedule \n 3. how to release \n 4. project list \n 5. who are you \n 6. schedule release ... \n 7. release ... \n 8. active schedule \n 9. remove schedule \n 10. access list \n 11. add access \n 12. delete access \n 13. enable access \n 14. disable access \n 15. test access \n 16. project list \n 17. add project \n 18. delete project \n 19. enable project \n 20. disable project \n 21. test project", user.ID)
 		// attachment.Pretext = "How can I be of service"
 		attachment.Footer = "GRIP Release Bot."
 		attachment.Color = "#563a9b"
@@ -423,7 +423,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			re := regexp.MustCompile(`delete project ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
-				attachment.Text = fmt.Sprintf("Roger <@%s>, Removing access for %s.", user.ID, strings.ToUpper(match[1]))
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Removing project %s.", user.ID, strings.ToUpper(match[1]))
 
 				models.DeleteProject(match[1])
 			} else {
@@ -437,7 +437,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			re := regexp.MustCompile(`enable project ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
-				attachment.Text = fmt.Sprintf("Roger <@%s>, Enabling project for %s.", user.ID, strings.ToUpper(match[1]))
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Enabling project %s.", user.ID, strings.ToUpper(match[1]))
 
 				models.ToogleProject(match[1], true)
 			} else {
@@ -451,7 +451,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			re := regexp.MustCompile(`disable project ([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
-				attachment.Text = fmt.Sprintf("Roger <@%s>, Disabling project for %s.", user.ID, strings.ToUpper(match[1]))
+				attachment.Text = fmt.Sprintf("Roger <@%s>, Disabling project %s.", user.ID, strings.ToUpper(match[1]))
 
 				models.ToogleProject(match[1], false)
 			} else {
@@ -467,7 +467,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			if match != nil {
 				result := models.GetProjectToken(match[1])
 
-				attachment.Text = fmt.Sprintf("Roger <@%s>, test project for %s, the token is %s", user.ID, strings.ToUpper(match[1]), result)
+				attachment.Text = fmt.Sprintf("Roger <@%s>, test project %s, the token is %s", user.ID, strings.ToUpper(match[1]), result)
 			} else {
 				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'test project project-name'.", user.ID)
 			}
