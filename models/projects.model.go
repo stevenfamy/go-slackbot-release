@@ -17,7 +17,7 @@ type Projects struct {
 }
 
 func AddNewProject(ProjectName string, ProjectToken string) {
-	_, err := DB.Query("INSERT INTO projects values (?,?,?,?)", uuid.New(), strings.ToLower(ProjectName), true, strings.ToLower(ProjectToken))
+	_, err := DB.Query("INSERT INTO projects values (?,?,?,?)", uuid.New(), strings.ToLower(ProjectName), true, strings.ToUpper(ProjectToken))
 	if err != nil {
 		log.Print(err.Error())
 	}

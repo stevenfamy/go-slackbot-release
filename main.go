@@ -406,7 +406,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		}
 	} else if strings.Contains(text, "add project") {
 		if models.UserIsAdmin((user.ID)) {
-			re := regexp.MustCompile(`add project ([^}]*)\-([^}]*).*`)
+			re := regexp.MustCompile(`add project ([^}]*)\|([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
 				attachment.Text = fmt.Sprintf("Roger <@%s>, Adding project %s.", user.ID, match[1])
