@@ -76,10 +76,10 @@ func ProjectIsAvailable(ProjectName string) bool {
 func GetProjectToken(ProjectName string) string {
 	var projects Projects
 
-	row := DB.QueryRow("Select jenkins_token from projects where project_name = ? and status = 1", strings.ToLower(ProjectName)).Scan(&projects.JenkinsToken)
+	err := DB.QueryRow("Select jenkins_token from projects where project_name = ? and status = 1", strings.ToLower(ProjectName)).Scan(&projects.JenkinsToken)
 
-	if row == nil {
-		log.Print(row.Error())
+	if err != nil {
+		log.Print(err.Error())
 		return ""
 	}
 
