@@ -106,7 +106,7 @@ func main() {
 				results, err := models.DB.Query("SELECT * FROM release_schedule WHERE released = 0")
 
 				if err != nil {
-					log.Printf(err.Error())
+					log.Print(err.Error())
 				}
 
 				//loop all active schedule
@@ -117,7 +117,7 @@ func main() {
 					err = results.Scan(&releaseSchedule.Id, &releaseSchedule.ReleaseOn, &releaseSchedule.ReleaseProject, &releaseSchedule.ReleaseVersion, &releaseSchedule.Released, &releaseSchedule.CreatedAt, &releaseSchedule.CreatedBy)
 
 					if err != nil {
-						log.Printf(err.Error())
+						log.Print(err.Error())
 					}
 
 					//parse and check time
