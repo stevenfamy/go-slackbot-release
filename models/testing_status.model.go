@@ -42,14 +42,14 @@ func GetServerStatus(Project string) string {
 
 		// tempDate2 := time.Unix(temp2, 0).In(location)
 
-		tempStatus := "In use"
-		if !testingStatus.Status {
-			tempStatus = "Not in use"
-		}
+		// tempStatus := "In use"
+		// if !testingStatus.Status {
+		// 	tempStatus = "Not in use"
+		// }
 
 		// tempList += fmt.Sprintf("%s. Server Id: *%s* (%s) \n Last build by: *%s* (%s) \n Last set done by: %s (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, tempStatus, testingStatus.LastBuildBy, tempDate, testingStatus.StatusChangedBy, tempDate2)
 
-		tempList += fmt.Sprintf("%s. Server Id: *%s* (%s) \n Last build by: *%s* (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, tempStatus, testingStatus.LastBuildBy, tempDate)
+		tempList += fmt.Sprintf("%s. Server Id: *%s* \n Last build by: *%s* (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, testingStatus.LastBuildBy, tempDate)
 		i++
 	}
 
