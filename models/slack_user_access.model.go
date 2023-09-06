@@ -57,6 +57,19 @@ func GetAllUsers() string {
 	return tempList
 }
 
+func GetUserName(SlackId string) string {
+	var slackUserAccess SlackUserAccess
+
+	err := DB.QueryRow("Select full_name from slack_user_access where slack_id = ? and released = 0", SlackId).Scan(&slackUserAccess.FullName)
+
+	if err != nil {
+		log.Print(err.Error())
+		return ""
+	}
+
+	return slackUserAccess.FullName
+}
+
 func DeleteUserAccess(SlackId string) {
 	_, err := DB.Query("DELETE from slack_user_access where slack_id = ?", strings.ToUpper(SlackId))
 	if err != nil {
@@ -78,10 +91,19 @@ func UserIsAdmin(SlackId string) bool {
 
 	return err == nil
 }
+
 func UserHasAccess(SlackId string) bool {
 	var slackUserAccess SlackUserAccess
 
 	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and status = 1", strings.ToUpper(SlackId)).Scan(&slackUserAccess.Id)
+
+	return err == nil
+}
+
+func UserHasAccessServerStatus(SlackId string) bool {
+	var slackUserAccess SlackUserAccess
+
+	err := DB.QueryRow("Select id from slack_user_access where slack_id = ? and status = 1 AND (roles = 1 OR roles = 2)", strings.ToUpper(SlackId)).Scan(&slackUserAccess.Id)
 
 	return err == nil
 }
