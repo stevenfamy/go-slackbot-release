@@ -37,7 +37,7 @@ func GetServerStatus(Project string) string {
 
 		temp, _ := strconv.ParseInt(strconv.Itoa(testingStatus.LastBuildOn), 10, 64)
 		temp2, _ := strconv.ParseInt(strconv.Itoa(testingStatus.StatusChangedOn), 10, 64)
-		location, _ := time.LoadLocation("Asia/Singapore")
+		location, _ := time.LoadLocation("Asia/Jakarta")
 		tempDate := time.Unix(temp, 0).In(location)
 
 		tempDate2 := time.Unix(temp2, 0).In(location)

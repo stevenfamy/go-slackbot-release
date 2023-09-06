@@ -498,7 +498,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			match := re.FindStringSubmatch(text)
 			if match != nil {
 				var Name = models.GetUserName(user.ID)
-				models.UpdateServerStatus(match[1], match[2], Name, false)
+				models.UpdateServerStatus(match[1], match[2], Name)
 
 				attachment.Text = fmt.Sprintf("On it <@%s>, Set Testing Server Status project %s and server %s to Not in use", user.ID, match[1], match[2])
 			} else {
