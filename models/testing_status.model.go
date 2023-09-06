@@ -53,8 +53,8 @@ func GetServerStatus(Project string) string {
 	return tempList
 }
 
-func UpdateServerStatus(Project string, ServerId string, Name string, Status bool) {
-	_, err := DB.Query("UPDATE testing_status set status = ?, status_changed_by = ?, status_changed_on = ? where project = ? and server_id = ?;", Status, Name, time.Now().Unix(), Project, ServerId)
+func UpdateServerStatus(Project string, ServerId string, Name string) {
+	_, err := DB.Query("UPDATE testing_status set status = 0, status_changed_by = ?, status_changed_on = ? where project = ? and server_id = ?", Name, time.Now().Unix(), Project, ServerId)
 	if err != nil {
 		log.Print(err.Error())
 	}
