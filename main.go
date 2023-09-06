@@ -476,37 +476,37 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		}
 		//TESTING SERVER COMMAND
 	} else if strings.Contains(text, "test server status") {
-		if models.UserHasAccessServerStatus((user.ID)) {
-			re := regexp.MustCompile(`test server status ([^}]*).*`)
-			match := re.FindStringSubmatch(text)
-			if match != nil {
-				result := models.GetServerStatus(match[1])
-				if result != "" {
-					attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Testing Server Status for project %s: \n\n %s", user.ID, match[1], result)
-				} else {
-					attachment.Text = fmt.Sprintf("Sorry <@%s>, Testing Server Status not found.", user.ID)
-				}
+		// if models.UserHasAccessServerStatus((user.ID)) {
+		re := regexp.MustCompile(`test server status ([^}]*).*`)
+		match := re.FindStringSubmatch(text)
+		if match != nil {
+			result := models.GetServerStatus(match[1])
+			if result != "" {
+				attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Testing Server Status for project %s: \n\n %s", user.ID, match[1], result)
 			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'test server status project-name'.", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, Testing Server Status not found.", user.ID)
 			}
 		} else {
-			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'test server status project-name'.", user.ID)
 		}
+		// } else {
+		// 	attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		// }
 	} else if strings.Contains(text, "done test server") {
-		if models.UserHasAccessServerStatus((user.ID)) {
-			re := regexp.MustCompile(`done test server ([^}]*),([^}]*)`)
-			match := re.FindStringSubmatch(text)
-			if match != nil {
-				var Name = models.GetUserName(user.ID)
-				models.UpdateServerStatus(match[1], match[2], Name)
+		// if models.UserHasAccessServerStatus((user.ID)) {
+		re := regexp.MustCompile(`done test server ([^}]*),([^}]*)`)
+		match := re.FindStringSubmatch(text)
+		if match != nil {
+			var Name = models.GetUserName(user.ID)
+			models.UpdateServerStatus(match[1], match[2], Name)
 
-				attachment.Text = fmt.Sprintf("On it <@%s>, Set Testing Server Status project %s and server %s to Not in use", user.ID, match[1], match[2])
-			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'done test server  project-name,server-id'.", user.ID)
-			}
+			attachment.Text = fmt.Sprintf("On it <@%s>, Set Testing Server Status project %s and server %s to Not in use", user.ID, match[1], match[2])
 		} else {
-			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'done test server  project-name,server-id'.", user.ID)
 		}
+		// } else {
+		// 	attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
+		// }
 	} else {
 		if user.ID == "U023A0BJUB1" {
 			attachment.Text = ":ice_cube: :tea:"
