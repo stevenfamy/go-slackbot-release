@@ -36,13 +36,17 @@ func GetServerStatus(Project string) string {
 		}
 
 		temp, _ := strconv.ParseInt(strconv.Itoa(testingStatus.LastBuildOn), 10, 64)
+		temp2, _ := strconv.ParseInt(strconv.Itoa(testingStatus.StatusChangedOn), 10, 64)
 		location, _ := time.LoadLocation("Asia/Singapore")
 		tempDate := time.Unix(temp, 0).In(location)
+
+		tempDate2 := time.Unix(temp2, 0).In(location)
+
 		tempStatus := "In use"
 		if !testingStatus.Status {
 			tempStatus = "Not in use"
 		}
-		tempList += fmt.Sprintf("%s. *%s* (%s) \n Last build by: %s (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, tempStatus, testingStatus.LastBuildBy, tempDate)
+		tempList += fmt.Sprintf("%s. Server Id: *%s* (%s) \n Last build by: *%s* (%s) \n Last set done by: %s (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, tempStatus, testingStatus.LastBuildBy, tempDate, testingStatus.StatusChangedBy, tempDate2)
 		i++
 	}
 
