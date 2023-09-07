@@ -570,8 +570,8 @@ func handleStatusCommand(command slack.SlashCommand, client *slack.Client) error
 
 	// Send the message to the channel
 	// The Channel is available in the command.ChannelID
-	_, _, err2 := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
-	if err2 != nil {
+	_, _, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+	if err != nil {
 		return fmt.Errorf("failed to post message: %w", err)
 	}
 	return nil
