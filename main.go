@@ -84,6 +84,26 @@ func main() {
 						// Replace with actual err handeling
 						log.Fatal(err)
 					}
+				case socketmode.EventTypeSlashCommand:
+					// The Event sent on the channel is not the same as the EventAPI events so we need to type cast it
+					eventsAPI, ok := event.Data.(slackevents.EventsAPIEvent)
+					if !ok {
+						log.Printf("Could not type cast the event to the EventsAPIEvent: %v\n", event)
+						continue
+					}
+					// We need to send an Acknowledge to the slack server
+					socket.Ack(*event.Request)
+					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
+
+					//log.Println(eventsAPI) // commenting for event hanndling
+
+					//------------------------------------
+					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
+					err := HandleEventMessage(eventsAPI, client)
+					if err != nil {
+						// Replace with actual err handeling
+						log.Fatal(err)
+					}
 				}
 			}
 		}
