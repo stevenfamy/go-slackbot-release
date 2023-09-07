@@ -561,15 +561,11 @@ func handleStatusCommand(command slack.SlashCommand, client *slack.Client) error
 	attachment.Fields = []slack.AttachmentField{}
 
 	result := models.GetServerStatus("logistics")
-	user, err := client.GetUserInfo(command.UserName)
-	if err != nil {
-		return err
-	}
 
 	if result != "" {
-		attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Testing Server Status for project %s: \n\n %s", user.ID, "logistics", result)
+		attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Testing Server Status for project %s: \n\n %s", command.UserName, "logistics", result)
 	} else {
-		attachment.Text = fmt.Sprintf("Sorry <@%s>, Testing Server Status not found.", user.ID)
+		attachment.Text = fmt.Sprintf("Sorry <@%s>, Testing Server Status not found.", command.UserName)
 	}
 
 	// Send the message to the channel
