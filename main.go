@@ -85,23 +85,17 @@ func main() {
 						log.Fatal(err)
 					}
 				case socketmode.EventTypeSlashCommand:
-					// The Event sent on the channel is not the same as the EventAPI events so we need to type cast it
-					eventsAPI, ok := event.Data.(slackevents.EventsAPIEvent)
+					// Just like before, type cast to the correct event type, this time a SlashEvent
+					command, ok := event.Data.(slack.SlashCommand)
 					if !ok {
-						log.Printf("Could not type cast the event to the EventsAPIEvent: %v\n", event)
+						log.Printf("Could not type cast the message to a SlashCommand: %v\n", command)
 						continue
 					}
-					// We need to send an Acknowledge to the slack server
+					// Dont forget to acknowledge the request
 					socket.Ack(*event.Request)
-					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
-
-					//log.Println(eventsAPI) // commenting for event hanndling
-
-					//------------------------------------
-					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
-					err := HandleEventMessage(eventsAPI, client)
+					// handleSlashCommand will take care of the command
+					err := handleSlashCommand(command, client)
 					if err != nil {
-						// Replace with actual err handeling
 						log.Fatal(err)
 					}
 				}
@@ -542,6 +536,45 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	// Send the message to the channel
 	// The Channel is available in the event message
 	_, _, err = client.PostMessage(event.Channel, slack.MsgOptionAttachments(attachment))
+	if err != nil {
+		return fmt.Errorf("failed to post message: %w", err)
+	}
+	return nil
+}
+
+func handleSlashCommand(command slack.SlashCommand, client *slack.Client) error {
+	// We need to switch depending on the command
+	switch command.Command {
+	case "/test_server_status_logistics":
+		// This was a hello command, so pass it along to the proper function
+		return handleStatusCommand(command, client)
+	}
+
+	return nil
+}
+
+func handleStatusCommand(command slack.SlashCommand, client *slack.Client) error {
+	// The Input is found in the text field so
+	// Create the attachment and assigned based on the message
+	attachment := slack.Attachment{}
+	// Add Some default context like user who mentioned the bot
+	attachment.Fields = []slack.AttachmentField{
+		{
+			Title: "Date",
+			Value: time.Now().String(),
+		}, {
+			Title: "Initializer",
+			Value: command.UserName,
+		},
+	}
+
+	// Greet the user
+	attachment.Text = fmt.Sprintf("Hello %s", command.Text)
+	attachment.Color = "#4af030"
+
+	// Send the message to the channel
+	// The Channel is available in the command.ChannelID
+	_, _, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
 	if err != nil {
 		return fmt.Errorf("failed to post message: %w", err)
 	}
