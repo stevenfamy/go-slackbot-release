@@ -172,7 +172,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 	}
 	// Check if the user said Hello to the bot
 	text := strings.ToLower(html.UnescapeString(event.Text))
-
+	log.Println(text)
 	// Create the attachment and assigned based on the message
 	attachment := slack.Attachment{}
 
