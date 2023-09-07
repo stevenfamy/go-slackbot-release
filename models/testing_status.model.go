@@ -16,10 +16,12 @@ type TestingStatus struct {
 	Status          bool   `json:"status"`
 	StatusChangedBy string `json:"status_changed_by"`
 	StatusChangedOn int    `json:"status_changed_on"`
+	LastFeBranch    string `json:"last_fe_branch"`
+	LastBeBranch    string `json:"last_be_branch"`
 }
 
 func GetServerStatus(Project string) string {
-	results, err := DB.Query("SELECT server_id, last_build_by, last_build_on, status, status_changed_by, status_changed_on FROM testing_status where project = ? order by server_id;", Project)
+	results, err := DB.Query("SELECT server_id, last_build_by, last_build_on, status, status_changed_by, status_changed_on, last_fe_branch, last_be_branch FROM testing_status where project = ? order by server_id;", Project)
 	if err != nil {
 		log.Print(err.Error())
 	}
@@ -29,7 +31,7 @@ func GetServerStatus(Project string) string {
 	for results.Next() {
 		var testingStatus TestingStatus
 
-		err = results.Scan(&testingStatus.ServerId, &testingStatus.LastBuildBy, &testingStatus.LastBuildOn, &testingStatus.Status, &testingStatus.StatusChangedBy, &testingStatus.StatusChangedOn)
+		err = results.Scan(&testingStatus.ServerId, &testingStatus.LastBuildBy, &testingStatus.LastBuildOn, &testingStatus.Status, &testingStatus.StatusChangedBy, &testingStatus.StatusChangedOn, &testingStatus.LastFeBranch, &testingStatus.LastBeBranch)
 
 		if err != nil {
 			log.Print(err.Error())
@@ -49,7 +51,7 @@ func GetServerStatus(Project string) string {
 
 		// tempList += fmt.Sprintf("%s. Server Id: *%s* (%s) \n Last build by: *%s* (%s) \n Last set done by: %s (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, tempStatus, testingStatus.LastBuildBy, tempDate, testingStatus.StatusChangedBy, tempDate2)
 
-		tempList += fmt.Sprintf("%s. Server Id: *%s* \n Last build by: *%s* (%s) \n\n", strconv.Itoa(i), testingStatus.ServerId, testingStatus.LastBuildBy, tempDate)
+		tempList += fmt.Sprintf("%s. Server Id: *%s* \n Last build by: *%s* (%s) \n Last FE Branch: %s \n Last BE Branch: %s \n\n", strconv.Itoa(i), testingStatus.ServerId, testingStatus.LastBuildBy, tempDate, testingStatus.LastFeBranch, testingStatus.LastBeBranch)
 		i++
 	}
 
