@@ -14,17 +14,18 @@ type Projects struct {
 	ProjectName  string `json:"project_name"`
 	Status       bool   `json:"status"`
 	JenkinsToken string `json:"jenkins_token"`
+	JenkinsHost  string `json:"jenkins_host"`
 }
 
-func AddNewProject(ProjectName string, ProjectToken string) {
-	_, err := DB.Query("INSERT INTO projects values (?,?,?,?)", uuid.New(), strings.ToLower(ProjectName), true, strings.ToUpper(ProjectToken))
+func AddNewProject(ProjectName string, ProjectToken string, JenkinsHost string) {
+	_, err := DB.Query("INSERT INTO projects values (?,?,?,?,?)", uuid.New(), strings.ToLower(ProjectName), true, strings.ToUpper(ProjectToken), JenkinsHost)
 	if err != nil {
 		log.Print(err.Error())
 	}
 }
 
 func GetAllProjects() string {
-	results, err := DB.Query("SELECT project_name, status, jenkins_token FROM projects order by project_name ASC;")
+	results, err := DB.Query("SELECT project_name, status, jenkins_token, jenkins_host FROM projects order by project_name ASC;")
 	if err != nil {
 		log.Print(err.Error())
 	}
@@ -34,7 +35,7 @@ func GetAllProjects() string {
 	for results.Next() {
 		var projects Projects
 
-		err = results.Scan(&projects.ProjectName, &projects.Status, &projects.JenkinsToken)
+		err = results.Scan(&projects.ProjectName, &projects.Status, &projects.JenkinsToken, &projects.JenkinsHost)
 
 		if err != nil {
 			log.Print(err.Error())
@@ -44,7 +45,7 @@ func GetAllProjects() string {
 		if !projects.Status {
 			tempStatus = "Disabled"
 		}
-		tempList += fmt.Sprintf("%s. *%s* : %s (%s) \n\n", strconv.Itoa(i), projects.ProjectName, projects.JenkinsToken, tempStatus)
+		tempList += fmt.Sprintf("%s. *%s* : %s - %s (%s) \n\n", strconv.Itoa(i), projects.ProjectName, projects.JenkinsToken, projects.JenkinsHost, tempStatus)
 		i++
 	}
 
@@ -84,4 +85,17 @@ func GetProjectToken(ProjectName string) string {
 	}
 
 	return projects.JenkinsToken
+}
+
+func GetProjectJenkinsHost(ProjectName string) string {
+	var projects Projects
+
+	err := DB.QueryRow("Select jenkins_host from projects where project_name = ? and status = 1", strings.ToLower(ProjectName)).Scan(&projects.JenkinsHost)
+
+	if err != nil {
+		log.Print(err.Error())
+		return ""
+	}
+
+	return projects.JenkinsHost
 }

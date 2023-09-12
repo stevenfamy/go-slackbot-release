@@ -420,14 +420,14 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 		}
 	} else if strings.Contains(text, "add project") {
 		if models.UserIsAdmin((user.ID)) {
-			re := regexp.MustCompile(`add project ([^}]*)\|([^}]*).*`)
+			re := regexp.MustCompile(`add project ([^}]*)\|([^}]*)\|([^}]*).*`)
 			match := re.FindStringSubmatch(text)
 			if match != nil {
 				attachment.Text = fmt.Sprintf("Roger <@%s>, Adding project %s.", user.ID, match[1])
 
-				models.AddNewProject(match[1], match[2])
+				models.AddNewProject(match[1], match[2], match[3])
 			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add project project name-jenkins token'.", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'add project project name|jenkins token|jenkins host'.", user.ID)
 			}
 		} else {
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
@@ -581,7 +581,7 @@ func handleStatusCommand(command slack.SlashCommand, client *slack.Client) error
 func callJenkins(project string, version string, isSchedule bool, time string) {
 	env := config.GetConfig("ENVIRONMENT")
 	isTesting := true
-	jenkinsAddress := config.GetConfig("JENKINS_HOST")
+	jenkinsAddress := models.GetProjectJenkinsHost(project)
 	jenkinsToken := models.GetProjectToken(project)
 	log.Print("jenkinsAddress", jenkinsAddress)
 	log.Print("jenkinsToken", jenkinsToken)
