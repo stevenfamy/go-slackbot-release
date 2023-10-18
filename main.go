@@ -545,7 +545,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 func handleSlashCommand(command slack.SlashCommand, client *slack.Client) error {
 	// We need to switch depending on the command
 	switch command.Command {
-	case "/sanbdbox_server_status_logistics":
+	case "/sandbox_server_status_logistics":
 		// This was a hello command, so pass it along to the proper function
 		return handleStatusCommand(command, client)
 	}
