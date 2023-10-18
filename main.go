@@ -489,34 +489,34 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 			attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
 		}
 		//TESTING SERVER COMMAND
-	} else if strings.Contains(text, "test server status") {
+	} else if strings.Contains(text, "sandbox server status") {
 		// if models.UserHasAccessServerStatus((user.ID)) {
-		re := regexp.MustCompile(`test server status ([^}]*).*`)
+		re := regexp.MustCompile(`sandbox server status ([^}]*).*`)
 		match := re.FindStringSubmatch(text)
 		if match != nil {
 			result := models.GetServerStatus(match[1])
 			if result != "" {
-				attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Testing Server Status for project %s: \n\n %s", user.ID, match[1], result)
+				attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Sandbox Server Status for project %s: \n\n %s", user.ID, match[1], result)
 			} else {
-				attachment.Text = fmt.Sprintf("Sorry <@%s>, Testing Server Status not found.", user.ID)
+				attachment.Text = fmt.Sprintf("Sorry <@%s>, Sandbox Server Status not found.", user.ID)
 			}
 		} else {
-			attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'test server status project-name'.", user.ID)
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'sandbox server status project-name'.", user.ID)
 		}
 		// } else {
 		// 	attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
 		// }
-	} else if strings.Contains(text, "done test server") {
+	} else if strings.Contains(text, "done sandbox server") {
 		// if models.UserHasAccessServerStatus((user.ID)) {
-		re := regexp.MustCompile(`done test server ([^}]*),([^}]*)`)
+		re := regexp.MustCompile(`done sandbox server ([^}]*),([^}]*)`)
 		match := re.FindStringSubmatch(text)
 		if match != nil {
 			var Name = models.GetUserName(user.ID)
 			models.UpdateServerStatus(match[1], match[2], Name)
 
-			attachment.Text = fmt.Sprintf("On it <@%s>, Set Testing Server Status project %s and server %s to Not in use", user.ID, match[1], match[2])
+			attachment.Text = fmt.Sprintf("On it <@%s>, Set Sandbox Server Status project %s and server %s to Not in use", user.ID, match[1], match[2])
 		} else {
-			attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'done test server  project-name,server-id'.", user.ID)
+			attachment.Text = fmt.Sprintf("Sorry <@%s>, make sure the format is 'done sandbox server  project-name,server-id'.", user.ID)
 		}
 		// } else {
 		// 	attachment.Text = fmt.Sprintf("Sorry <@%s>, you don't have the permission to do that", user.ID)
@@ -545,7 +545,7 @@ func HandleAppMentionEventToBot(event *slackevents.AppMentionEvent, client *slac
 func handleSlashCommand(command slack.SlashCommand, client *slack.Client) error {
 	// We need to switch depending on the command
 	switch command.Command {
-	case "/test_server_status_logistics":
+	case "/sanbdbox_server_status_logistics":
 		// This was a hello command, so pass it along to the proper function
 		return handleStatusCommand(command, client)
 	}
@@ -563,9 +563,9 @@ func handleStatusCommand(command slack.SlashCommand, client *slack.Client) error
 	result := models.GetServerStatus("logistics")
 
 	if result != "" {
-		attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Testing Server Status for project %s: \n\n %s", command.UserName, "logistics", result)
+		attachment.Text = fmt.Sprintf("Gotcha <@%s>, this is the Sandbox Server Status for project %s: \n\n %s", command.UserName, "logistics", result)
 	} else {
-		attachment.Text = fmt.Sprintf("Sorry <@%s>, Testing Server Status not found.", command.UserName)
+		attachment.Text = fmt.Sprintf("Sorry <@%s>, Sandbox Server Status not found.", command.UserName)
 	}
 
 	// Send the message to the channel
